@@ -12,121 +12,73 @@ import CoreLocation
 class MainTableViewController: UITableViewController {
     
     enum Constants {
-        static let defaultCoordinates = CLLocationCoordinate2D(latitude: 47.4925, longitude: 19.0513)
+        static let defaultCoordinates = CLLocationCoordinate2D(latitude: 49.839683, longitude: 24.029717)
     }
+    
+    let locationManager = CLLocationManager()
+    let celcius = "°"
 
     var weatherData = WeatherAPI()
-    
+    var weatherModel = [WeatherModel]()
+    var cityTextField: String = ""
+    var countryTextfield: String = ""
+    var cityNameTextField: UITextField?
+    var countryCodeTextField: UITextField?
+
     @IBOutlet weak var weatherDescription: UILabel!
     @IBOutlet weak var weatherLocations: UILabel!
     @IBOutlet weak var weatherTemperature: UILabel!
     @IBOutlet weak var weatherIcon: UIImageView!
     
-    let locationManager = CLLocationManager()
-    
     @IBAction func alertButtonItem(_ sender: UIBarButtonItem) {
         
-        let alertController = UIAlertController(title: "Add New Country", message: "", preferredStyle: .alert)
-        alertController.addTextField { (textField : UITextField!) -> Void in
-            textField.placeholder = "Country name 'Lviv'"
-        }
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .default, handler: { (action : UIAlertAction!) -> Void in })
-        alertController.addTextField { (textField : UITextField!) -> Void in
-            textField.placeholder = "Country code 'ua'"
-        }
-        alertController.addAction(cancelAction)
-        
-        self.present(alertController, animated: true, completion: nil)
+        alertController()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         
         locationManager.requestWhenInUseAuthorization()
         locationManager.delegate = self
         locationManager.startUpdatingLocation()
         
         refreshCurrentWeather()
-
-        
-        
-        
+        changeCountry()
     }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         
     }
-
+    
     // MARK: - Table view data source
-
+    
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
+        return 1
     }
-
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return 0
+        return self.weatherModel.count
     }
-
-    /*
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "weatherCell") as! WeatherTableViewCell
 
-        // Configure the cell...
-
+        cell.weatherDescriptionCell.text = self.weatherModel[indexPath.row].weather[indexPath.row].description
+        cell.weatherCityCell.text = self.weatherModel[indexPath.row].name
+        cell.weatherTemperatureCell.text = String(Int(weatherModel[indexPath.row].main.temp))
+        
         return cell
     }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+    
+    func changeCountry(){
+        weatherData.fetchArticles(cityName: (cityNameTextField?.text) ?? "" , countryCode: (countryCodeTextField?.text) ?? "") {  weatherModel in
+            guard let weatherModel = weatherModel else {
+                // error
+                return
+            }
+        }
     }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 
 
@@ -140,7 +92,7 @@ private extension MainTableViewController {
                 // error
                 return
             }
-            self.weatherTemperature.text = String(Int(weatherModel.main.temp))
+            self.weatherTemperature.text = String(Int(weatherModel.main.temp)) + self.celcius
             self.weatherLocations.text = weatherModel.name
             self.weatherDescription.text = weatherModel.weather.first?.description
             
@@ -154,7 +106,6 @@ private extension MainTableViewController {
             })
         }
     }
-    
 }
 
 extension MainTableViewController: CLLocationManagerDelegate {
@@ -165,9 +116,38 @@ extension MainTableViewController: CLLocationManagerDelegate {
         // todo: update wheather in header
         print(location.coordinate.latitude, location.coordinate.longitude)
         refreshCurrentWeather()
-        
     }
 }
 
-
-
+extension MainTableViewController {
+    
+    func alertController() {
+        
+        let alertController = UIAlertController(title: "Add New Country", message: nil, preferredStyle: .alert)
+        alertController.addTextField(configurationHandler: nameTextField)
+        alertController.addTextField(configurationHandler: countryTextField)
+        
+        let cancelAction = UIAlertAction(title:"Cancel", style: .cancel, handler: nil)
+        let saveAction = UIAlertAction(title: "Save", style: .default, handler: self.saveHendler)
+        
+        alertController.addAction(cancelAction)
+        alertController.addAction(saveAction)
+        
+        self.present(alertController, animated: true, completion: nil)
+    }
+    
+    func nameTextField(textField: UITextField) {
+        cityNameTextField = textField
+        cityNameTextField?.placeholder = "City name example: New York"
+    }
+    
+    func countryTextField(textField: UITextField) {
+        countryCodeTextField = textField
+        countryCodeTextField?.placeholder = "Country code example: us"
+    }
+    
+    func saveHendler(alert: UIAlertAction) {
+        cityTextField = (cityNameTextField?.text)!
+        countryTextfield = (countryCodeTextField?.text)!
+    }
+}
