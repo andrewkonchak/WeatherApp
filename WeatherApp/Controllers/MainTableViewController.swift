@@ -17,37 +17,39 @@ class MainTableViewController: UITableViewController {
     
     let locationManager = CLLocationManager()
     let celcius = "°"
-
+    let userDefaults = UserDefaults.standard
+    
     var weatherData = WeatherAPI()
     var weatherModel = [WeatherModel]()
     var cityTextField: String = ""
     var countryTextfield: String = ""
     var cityNameTextField: UITextField?
     var countryCodeTextField: UITextField?
-
+    
     @IBOutlet weak var weatherDescription: UILabel!
     @IBOutlet weak var weatherLocations: UILabel!
     @IBOutlet weak var weatherTemperature: UILabel!
     @IBOutlet weak var weatherIcon: UIImageView!
+    @IBOutlet weak var imageBackground: UIImageView!
     
     @IBAction func alertButtonItem(_ sender: UIBarButtonItem) {
-        
         alertController()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        imageBackground.layer.cornerRadius = 15
+        
         locationManager.requestWhenInUseAuthorization()
         locationManager.delegate = self
         locationManager.startUpdatingLocation()
         
+        addNewCityWeather()
         refreshCurrentWeather()
-        changeCountry()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
+    override func viewWillAppear(_ animated: Bool) {
         
     }
     
@@ -63,21 +65,35 @@ class MainTableViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "weatherCell") as! WeatherTableViewCell
-
-        cell.weatherDescriptionCell.text = self.weatherModel[indexPath.row].weather[indexPath.row].description
+        
+        cell.weatherDescriptionCell.text = self.weatherModel[indexPath.row].weather.first?.description
         cell.weatherCityCell.text = self.weatherModel[indexPath.row].name
-        cell.weatherTemperatureCell.text = String(Int(weatherModel[indexPath.row].main.temp))
+        cell.weatherTemperatureCell.text = String(Int(weatherModel[indexPath.row].main.temp)) + self.celcius
+        self.weatherData.fetchIconData(code: weatherModel[indexPath.row].weather.first!.icon, completionHandler: { data in
+            if let data = data {
+                let image = UIImage(data: data)
+                DispatchQueue.main.async {
+                    cell.weatherIconCell.image =  image
+                }
+            }
+        })
         
         return cell
     }
     
-    func changeCountry(){
-        weatherData.fetchArticles(cityName: (cityNameTextField?.text) ?? "" , countryCode: (countryCodeTextField?.text) ?? "") {  weatherModel in
-            guard let weatherModel = weatherModel else {
-                // error
-                return
-            }
-        }
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .normal, title:  "", handler: { (ac:UIContextualAction, view:UIView, success:(Bool) -> Void) in
+            self.weatherModel.remove(at: indexPath.row)
+            tableView.reloadData()
+            success(true)
+        })
+        deleteAction.image = UIImage(named: "close-circular-button-of-a-cross")
+        deleteAction.backgroundColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+        return UISwipeActionsConfiguration(actions: [deleteAction])
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "weatherFullView", sender: weatherModel[indexPath.row])
     }
 }
 
@@ -104,6 +120,18 @@ private extension MainTableViewController {
                     }
                 }
             })
+        }
+    }
+    
+    func addNewCityWeather() {
+        weatherData.fetchArticles(cityName: userDefaults.object(forKey: "city") as? String ?? "", countryCode: userDefaults.object(forKey: "code") as? String ?? "") { weatherModel in
+            guard let weatherModel = weatherModel else {
+                // error
+                return
+            }
+            
+            self.weatherModel.append(WeatherModel(name: weatherModel.name, weather: weatherModel.weather, main: weatherModel.main))
+            self.tableView.reloadData()
         }
     }
 }
@@ -147,7 +175,14 @@ extension MainTableViewController {
     }
     
     func saveHendler(alert: UIAlertAction) {
-        cityTextField = (cityNameTextField?.text)!
-        countryTextfield = (countryCodeTextField?.text)!
+        userDefaults.set(cityNameTextField?.text, forKey: "city")
+        userDefaults.set(countryCodeTextField?.text, forKey: "code")
+        cityTextField = (cityNameTextField?.text) ?? ""
+        countryTextfield = (countryCodeTextField?.text) ?? ""
+        addNewCityWeather()
     }
 }
+
+
+
+
