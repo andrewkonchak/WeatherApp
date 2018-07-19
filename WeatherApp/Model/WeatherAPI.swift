@@ -40,10 +40,32 @@ class WeatherAPI {
                 }
             }
             } .resume()
-        }
+    }
     
     func fetchCurrentWeather(lat: Double, long: Double, completionHandler: @escaping CompletionHandler) {
         let url = Constants.baseUrlString + "weather?appid=\(Constants.appID)&lat=\(lat)&lon=\(long)&units=metric"
+        guard let stringURL = URL(string: url) else { return }
+        URLSession.shared.dataTask(with: stringURL) { (data, response, error) in
+            
+            DispatchQueue.main.async {
+                guard let data = data else { return }
+                
+                do {
+                    let weatherDescription = try JSONDecoder().decode(self.weatherMod, from: data)
+                    print(weatherDescription.name, weatherDescription.weather)
+                    completionHandler(weatherDescription)
+                    
+                } catch let jsonError {
+                    print("Error srializing json: ", jsonError)
+                    completionHandler(nil)
+                    
+                }
+            }
+            } .resume()
+    }
+    
+    func fetchDailyWeather(cityName: String, completionHandler: @escaping CompletionHandler) {
+        let url = Constants.baseUrlString + "forecast/daily?q=\(cityName)&mode=xml&units=metric&cnt=7"
         guard let stringURL = URL(string: url) else { return }
         URLSession.shared.dataTask(with: stringURL) { (data, response, error) in
             

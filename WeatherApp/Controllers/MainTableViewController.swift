@@ -95,6 +95,14 @@ class MainTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "weatherFullView", sender: weatherModel[indexPath.row])
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "weatherFullView"{
+            let weatherViewTo = segue.destination as! WeatherFullViewController
+            weatherViewTo.weatherFromCell = sender as? WeatherModel
+        }
+    }
+    
 }
 
 
