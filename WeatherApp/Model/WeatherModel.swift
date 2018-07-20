@@ -14,6 +14,7 @@ struct WeatherModel: Decodable {
         let temp: Double
         let temp_min: Double
         let temp_max: Double
+        
     }
     
     let name: String
@@ -27,5 +28,9 @@ struct Weather: Decodable {
     let main: String
     let icon: String
 }
+
+
+
+
 
 

@@ -21,8 +21,8 @@ class MainTableViewController: UITableViewController {
     
     var weatherData = WeatherAPI()
     var weatherModel = [WeatherModel]()
-    var cityTextField: String = ""
-    var countryTextfield: String = ""
+    var cityTextField = ""
+    var countryTextfield = ""
     var cityNameTextField: UITextField?
     var countryCodeTextField: UITextField?
     
@@ -84,6 +84,8 @@ class MainTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .normal, title:  "", handler: { (ac:UIContextualAction, view:UIView, success:(Bool) -> Void) in
             self.weatherModel.remove(at: indexPath.row)
+            self.userDefaults.removeObject(forKey: "city")
+            self.userDefaults.removeObject(forKey: "code")
             tableView.reloadData()
             success(true)
         })

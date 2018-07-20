@@ -23,15 +23,15 @@ class WeatherFullTableViewCell: UITableViewCell {
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
         // Configure the view for the selected state
     }
     
-    func configureCell(tempMin: Int, tempMax:Int, day: String) {
+    func configureCell(tempMin: String, tempMax: String, day: String, icon: String) {
+        
+        self.tempMinFullViewCell.text = tempMin
+        self.tempMaxFullViewCell.text = tempMax
         self.daysFullViewCell.text = day
-        self.tempMinFullViewCell.text = String(tempMin)
-        self.tempMaxFullViewCell.text = String(tempMax)
     }
     
-
+    
 }
