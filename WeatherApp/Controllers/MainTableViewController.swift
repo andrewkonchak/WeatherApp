@@ -35,6 +35,8 @@ class MainTableViewController: UITableViewController {
     @IBAction func alertButtonItem(_ sender: UIBarButtonItem) {
         alertController()
     }
+    @IBAction func cureentWeatherFullView(_ sender: Any) {
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -134,7 +136,7 @@ private extension MainTableViewController {
     }
     
     func addNewCityWeather() {
-        weatherData.fetchArticles(cityName: userDefaults.object(forKey: "city") as? String ?? "", countryCode: userDefaults.object(forKey: "code") as? String ?? "") { weatherModel in
+        weatherData.fetchCurrentWeather(cityName: userDefaults.object(forKey: "city") as? String ?? "", countryCode: userDefaults.object(forKey: "code") as? String ?? "") { weatherModel in
             guard let weatherModel = weatherModel else {
                 // error
                 return

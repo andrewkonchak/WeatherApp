@@ -10,82 +10,59 @@ import UIKit
 
 class WeatherAPI {
     
-    let weatherMod = WeatherModel.self
-    let forecastMod = ForecastModel.self
     enum Constants {
-        
-        static let baseUrlString = "http://api.openweathermap.org/data/2.5/"
+        static let baseUrlString = "http://api.openweathermap.org/data/2.5"
         static let appID = "dc75601c3a328075e92872fbbc36b16e"
     }
     
-    typealias CompletionHandler = (WeatherModel?) -> Void
-    typealias WeatherCompletionHandler = (ForecastModel?) -> Void
+    typealias WeatherCompletion = (WeatherModel?) -> Void
+    typealias ForecastCompletion = (ForecastModel?) -> Void
     
     
-    func fetchArticles(cityName: String, countryCode: String, completionHandler: @escaping CompletionHandler) {
-        let url = Constants.baseUrlString + "weather?appid=\(Constants.appID)&q=\(cityName),\(countryCode)&units=metric"
-        guard let stringURL = URL(string: url) else { return }
-        URLSession.shared.dataTask(with: stringURL) { (data, response, error) in
-            
-            DispatchQueue.main.async {
-                guard let data = data else { return }
-                
-                do {
-                    let weatherDescription = try JSONDecoder().decode(self.weatherMod, from: data)
-                    print(weatherDescription.name, weatherDescription.weather)
-                    completionHandler(weatherDescription)
-                    
-                } catch let jsonError {
-                    print("Error srializing json: ", jsonError)
-                    completionHandler(nil)
-                    
-                }
-            }
-            } .resume()
+    func fetchCurrentWeather(cityName: String, countryCode: String, completionHandler: @escaping WeatherCompletion) {
+        let urlString = "\(Constants.baseUrlString)/weather"
+        let parameters: [String: Any] = [
+            "q": parameter(fromCityName: cityName, countryCode: countryCode)
+        ]
+        let url = constructURL(from: urlString, parameters: parameters)!
+        request(url: url, completionHandler: completionHandler)
     }
     
-    func fetchCurrentWeather(lat: Double, long: Double, completionHandler: @escaping CompletionHandler) {
-        let url = Constants.baseUrlString + "weather?appid=\(Constants.appID)&lat=\(lat)&lon=\(long)&units=metric"
-        guard let stringURL = URL(string: url) else { return }
-        URLSession.shared.dataTask(with: stringURL) { (data, response, error) in
-            
-            DispatchQueue.main.async {
-                guard let data = data else { return }
-                
-                do {
-                    let weatherDescription = try JSONDecoder().decode(self.weatherMod, from: data)
-                    print(weatherDescription.name, weatherDescription.weather)
-                    completionHandler(weatherDescription)
-                    
-                } catch let jsonError {
-                    print("Error srializing json: ", jsonError)
-                    completionHandler(nil)
-                    
-                }
-            }
-            } .resume()
+    func fetchCurrentWeather(lat: Double, long: Double, completionHandler: @escaping WeatherCompletion) {
+        let urlString = "\(Constants.baseUrlString)/weather"
+        let url = constructURL(from: urlString, parameters: ["lat": lat, "lon": long])!
+        request(url: url, completionHandler: completionHandler)
     }
     
-    func fetchDailyWeather(cityNameForecast: String, countryCodeForecast: String, completionHandler: @escaping WeatherCompletionHandler) {
-        let url = Constants.baseUrlString + "forecast/daily?q=\(cityNameForecast),\(countryCodeForecast)&appid=b6907d289e10d714a6e88b30761fae22"
-        guard let stringURL = URL(string: url) else { return }
-        URLSession.shared.dataTask(with: stringURL) { (data, response, error) in
-            
-            DispatchQueue.main.async {
-                guard let data = data else { return }
-                
-                do {
-                    let forecastDescription = try JSONDecoder().decode(self.forecastMod, from: data)
-                    print(forecastDescription.list)
-                    completionHandler(forecastDescription)
-                    
-                } catch let jsonError {
-                    print("Error srializing json: ", jsonError)
-                    completionHandler(nil)
-                    
-                }
-            }
-            } .resume()
+    func fetchDailyWeather(cityName: String, countryCode: String, completionHandler: @escaping ForecastCompletion) {
+        
+        let urlString = "\(Constants.baseUrlString)/forecast"
+        let parameters: [String: Any] = [
+            "q": parameter(fromCityName: cityName, countryCode: countryCode),
+        ]
+        let url = constructURL(from: urlString, parameters: parameters)!
+        request(url: url, completionHandler: completionHandler)
+    }
+    
+    func constructURL(from string: String, parameters: [String: Any]) -> URL? {
+        
+        guard var components = URLComponents(string: string) else {
+            return nil
+        }
+        
+        var allParameters = standartParameters()
+        for (key, value) in parameters {
+            allParameters.updateValue("\(value)", forKey: key)
+        }
+        
+        
+        var queryItems: [URLQueryItem] = []
+        for (key, value) in allParameters {
+            let queryItem = URLQueryItem(name: key, value: value)
+            queryItems.append(queryItem)
+        }
+        components.queryItems = queryItems
+        return components.url
     }
     
     func fetchIconData(code: String, completionHandler: @escaping (Data?) -> Void) {
@@ -98,5 +75,38 @@ class WeatherAPI {
             let data = try? Data(contentsOf: url)
             completionHandler(data)
         }
+    }
+}
+
+// MARK: - private helpers
+private extension WeatherAPI {
+    
+    func request<T: Decodable>(url: URL, completionHandler: @escaping (T?) -> Void) {
+        URLSession.shared.dataTask(with: url) { (data, response, error) in
+            
+            DispatchQueue.main.async {
+                
+                guard let data = data else {
+                    completionHandler(nil)
+                    return
+                }
+                
+                do {
+                    let result = try JSONDecoder().decode(T.self, from: data)
+                    completionHandler(result)
+                    
+                } catch {
+                    completionHandler(nil)
+                }
+            }
+            } .resume()
+    }
+    
+    func standartParameters() -> [String: String] {
+        return ["appid": Constants.appID, "units": "metric"]
+    }
+    
+    func parameter(fromCityName cityName: String, countryCode: String) -> String {
+        return "\(cityName),\(countryCode)"
     }
 }

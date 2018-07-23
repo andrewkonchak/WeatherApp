@@ -12,13 +12,18 @@ struct ForecastModel: Decodable {
     
     let list: [List]
     
-    struct Temp: Decodable {
-        let min: Double
-        let max: Double
+    struct Weather: Decodable {
+        let icon: String
+    }
+    
+    struct Main: Decodable {
+        let temp_min: Double
+        let temp_max: Double
     }
     
     struct List: Decodable {
-        let temp: Temp
-        let dt: Int
+        let main: Main
+        let dt: Double
+        let weather: [Weather]
     }
 }

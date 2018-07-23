@@ -20,11 +20,6 @@ class WeatherFullTableViewCell: UITableViewCell {
         super.awakeFromNib()
         cellVisualEffect.layer.cornerRadius = 10
     }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-        // Configure the view for the selected state
-    }
     
     func configureCell(tempMin: String, tempMax: String, day: String, icon: String) {
         
@@ -32,6 +27,4 @@ class WeatherFullTableViewCell: UITableViewCell {
         self.tempMaxFullViewCell.text = tempMax
         self.daysFullViewCell.text = day
     }
-    
-    
 }
