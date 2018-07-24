@@ -13,9 +13,10 @@ import UIKit
 class WeatherFullViewController: UIViewController {
     
     var weatherTableView = MainTableViewController()
-    var weatherFromCell: WeatherModel!
+    var weatherFromCell: WeatherModel?
     var forecastViewModel: ForecastViewModel?
     var weatherApiModel = WeatherAPI()
+
     
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var cityImageLabel: UIImageView!
@@ -64,7 +65,6 @@ extension WeatherFullViewController: UITableViewDataSource, UITableViewDelegate 
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        return forecastModel?.list.count ?? 0
         return dataSource.count
         
     }
@@ -77,9 +77,8 @@ extension WeatherFullViewController: UITableViewDataSource, UITableViewDelegate 
         
         cell.tempMaxFullViewCell.text = String(Int(viewModel.maxTemp)) + weatherTableView.celcius
         cell.tempMinFullViewCell.text = String(Int(viewModel.minTemp)) + weatherTableView.celcius
-        
-        
         cell.daysFullViewCell.text = viewModel.dayName
+        
         self.weatherApiModel.fetchIconData(code: viewModel.icon, completionHandler: { data in
             if let data = data {
                 let image = UIImage(data: data)

@@ -35,7 +35,9 @@ class MainTableViewController: UITableViewController {
     @IBAction func alertButtonItem(_ sender: UIBarButtonItem) {
         alertController()
     }
-    @IBAction func cureentWeatherFullView(_ sender: Any) {
+    
+    @IBAction func tapGestureRecognizer(_ sender: Any) {
+       //performSegue(withIdentifier: "currentWeatherFullView", sender: self)
     }
     
     override func viewDidLoad() {
@@ -101,12 +103,14 @@ class MainTableViewController: UITableViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "weatherFullView"{
+        if segue.identifier == "weatherFullView" {
             let weatherViewTo = segue.destination as! WeatherFullViewController
             weatherViewTo.weatherFromCell = sender as? WeatherModel
         }
+//        else if segue.identifier == "currentWeatherFullView" {
+//            let secondView = segue.destination as! WeatherFullViewController
+//        }
     }
-    
 }
 
 

@@ -20,7 +20,7 @@ struct ForecastViewModel {
 struct ForecastViewModelMapper {
     
     func makeViewModels(from response: ForecastModel) -> [ForecastViewModel] {
-        typealias DayRecord = (minTemp: Double, maxTemp: Double)
+        typealias DayRecord = (minTemp: Double, maxTemp: Double, icon: String)
         
         var groupedDays: [Date: DayRecord] = [:]
         let currentDayStart = Date().stardOfDay()
@@ -34,13 +34,16 @@ struct ForecastViewModelMapper {
             
             let maxTemp = listModel.main.temp_max
             let minTemp = listModel.main.temp_min
-            let currentRecord = groupedDays[key] ?? (0, 0)
+            let icon = listModel.weather.first?.icon
+            let currentRecord = groupedDays[key] ?? (0, 0, "")
             var newRecord = currentRecord
             
             if maxTemp > newRecord.maxTemp {
                 newRecord.maxTemp = maxTemp
             } else if minTemp > newRecord.minTemp {
                 newRecord.minTemp = minTemp
+            } else if icon != nil {
+                newRecord.icon = icon ?? ""
             }
             groupedDays[key] = newRecord
         }
@@ -50,6 +53,6 @@ struct ForecastViewModelMapper {
         }
         
         let sortedGroups = groupedDays.sorted { a, b in a.key < b.key }
-        return sortedGroups.map { return ForecastViewModel(dayName: $0.key.dayName(), minTemp: $0.value.minTemp, maxTemp: $0.value.maxTemp, icon: "50d") }
+        return sortedGroups.map { return ForecastViewModel(dayName: $0.key.dayName(), minTemp: $0.value.minTemp, maxTemp: $0.value.maxTemp, icon: $0.value.icon) }
     }
 }
